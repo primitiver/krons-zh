@@ -67,6 +67,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+kronos_env/
 
 # Temporary files
 *.tmp
@@ -74,3 +75,8 @@ venv.bak/
 temp/
 tmp/
 .python-version
+
+# Prediction result images
+examples/*.png
+examples/data/
+examples/prediction_results/

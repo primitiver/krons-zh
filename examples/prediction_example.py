@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
@@ -5,37 +8,33 @@ sys.path.append("../")
 from model import Kronos, KronosTokenizer, KronosPredictor
 
 
-def plot_prediction(kline_df, pred_df):
-    pred_df.index = kline_df.index[-pred_df.shape[0]:]
-    sr_close = kline_df['close']
-    sr_pred_close = pred_df['close']
-    sr_close.name = 'Ground Truth'
-    sr_pred_close.name = "Prediction"
+def plot_prediction(kline_df, pred_df, lookback, pred_len):
+    pred_df = pred_df.copy()
+    pred_df.index = pd.to_datetime(kline_df.loc[lookback:lookback+pred_len-1, 'timestamps'].values)
 
-    sr_volume = kline_df['volume']
-    sr_pred_volume = pred_df['volume']
-    sr_volume.name = 'Ground Truth'
-    sr_pred_volume.name = "Prediction"
+    # 为真实值创建时间索引
+    kline_df = kline_df.copy()
+    kline_df.index = pd.to_datetime(kline_df['timestamps'].values)
 
-    close_df = pd.concat([sr_close, sr_pred_close], axis=1)
-    volume_df = pd.concat([sr_volume, sr_pred_volume], axis=1)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 7), sharex=True)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
-
-    ax1.plot(close_df['Ground Truth'], label='Ground Truth', color='blue', linewidth=1.5)
-    ax1.plot(close_df['Prediction'], label='Prediction', color='red', linewidth=1.5)
+    ax1.plot(kline_df.index, kline_df['close'], label='Ground Truth', color='blue', linewidth=1.5)
+    ax1.plot(pred_df.index, pred_df['close'], label='Prediction', color='red', linewidth=1.5)
     ax1.set_ylabel('Close Price', fontsize=14)
     ax1.legend(loc='lower left', fontsize=12)
     ax1.grid(True)
 
-    ax2.plot(volume_df['Ground Truth'], label='Ground Truth', color='blue', linewidth=1.5)
-    ax2.plot(volume_df['Prediction'], label='Prediction', color='red', linewidth=1.5)
+    ax2.plot(kline_df.index, kline_df['volume'], label='Ground Truth', color='blue', linewidth=1.5)
+    ax2.plot(pred_df.index, pred_df['volume'], label='Prediction', color='red', linewidth=1.5)
     ax2.set_ylabel('Volume', fontsize=14)
     ax2.legend(loc='upper left', fontsize=12)
     ax2.grid(True)
 
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
-    plt.show()
+    plt.savefig('prediction_result.png', dpi=150)
+    print('结果已保存到 prediction_result.png')
 
 
 # 1. Load Model and Tokenizer
@@ -76,5 +75,5 @@ print(pred_df.head())
 kline_df = df.loc[:lookback+pred_len-1]
 
 # visualize
-plot_prediction(kline_df, pred_df)
+plot_prediction(kline_df, pred_df, lookback, pred_len)
 

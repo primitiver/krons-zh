@@ -1,40 +1,39 @@
 #!/bin/bash
 
-# Kronos Web UI startup script
+# Kronos WebUI 启动脚本
 
-echo "🚀 Starting Kronos Web UI..."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_DIR/kronos_env"
+
 echo "================================"
-
-# Check if Python is installed
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 not installed, please install Python3 first"
-    exit 1
-fi
-
-# Check if in correct directory
-if [ ! -f "app.py" ]; then
-    echo "❌ Please run this script in the webui directory"
-    exit 1
-fi
-
-# Check dependencies
-echo "📦 Checking dependencies..."
-if ! python3 -c "import flask, flask_cors, pandas, numpy, plotly" &> /dev/null; then
-    echo "⚠️  Missing dependencies, installing..."
-    pip3 install -r requirements.txt
-    if [ $? -ne 0 ]; then
-        echo "❌ Dependencies installation failed"
-        exit 1
-    fi
-    echo "✅ Dependencies installation completed"
-else
-    echo "✅ All dependencies installed"
-fi
-
-# Start application
-echo "🌐 Starting Web server..."
-echo "Access URL: http://localhost:7070"
-echo "Press Ctrl+C to stop server"
+echo "  Kronos 股票预测 WebUI"
+echo "================================"
 echo ""
 
+# 检查虚拟环境
+if [ ! -d "$VENV_DIR" ]; then
+    echo "未找到虚拟环境，请先运行一键安装脚本："
+    echo "  bash $PROJECT_DIR/install.sh"
+    exit 1
+fi
+
+# 激活虚拟环境
+source "$VENV_DIR/bin/activate"
+
+# 检查依赖
+echo "检查依赖..."
+if ! python3 -c "import fastapi, uvicorn, pandas, matplotlib" &>/dev/null; then
+    echo "依赖不完整，正在安装..."
+    pip install -r "$SCRIPT_DIR/requirements.txt" -q
+fi
+
+# 启动服务
+echo ""
+echo "WebUI 启动中..."
+echo "浏览器访问: http://localhost:8899"
+echo "按 Ctrl+C 停止服务"
+echo ""
+
+cd "$SCRIPT_DIR"
 python3 app.py
